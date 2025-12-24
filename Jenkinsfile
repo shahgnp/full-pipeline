@@ -152,6 +152,7 @@ pipeline {
 
                     echo "--- Signing Image ---"
                     cosign sign --key ${COSIGN_KEY_FILE} \
+                        --registry-allow-insecure \
                         -y \
                         ${NEXUS_REGISTRY}/${IMAGE_NAME}:${VERSION_TAG}
                     '''
