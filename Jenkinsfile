@@ -178,14 +178,7 @@ pipeline {
             steps {
                 script {
                     echo "--- Running OWASP ZAP Scan ---"
-                    // Get the Gateway IP (Host IP) so the Docker container can see the App
                     def hostIP = "host.docker.internal" 
-                    // Note: On Linux, 'host.docker.internal' might require '--add-host' flag. 
-                    // If Jenkins is on Linux, easier to use the specific IP or network.
-                    // For this lab, assuming Linux agent, we use the Network Gateway or IP.
-                    
-                    // Simplified: We use a lightweight ZAP run via Docker
-                    // We mount the current directory ($(pwd)) to /zap/wrk to save the report
                     // docker run --rm \
                     // -v \$(pwd):/zap/wrk/:rw \
                     // -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
@@ -195,12 +188,15 @@ pipeline {
                     try {
                         sh """
                         docker run --rm \
-                        -v \$(pwd):/zap/wrk/:rw \
+                        -v $WORKSPACE:/zap/wrk:rw \
                         --network host \
-                          -u 1002:1002 \
-                        zaproxy/zap-stable zap-baseline.py \
-                        -t http://localhost:${ZAP_PORT} \
-                        -r zap_report.html \
+                        -u $(id -u):$(id -g) \
+                        -e ZAP_HOME=/zap/wrk \
+                        zaproxy/zap-stable \
+                        zap-baseline.py \
+                        -t http://localhost:9000 \
+                        -r /zap/wrk/zap_report.html \
+                        -c /zap/wrk/zap.yaml
                         || true 
                         """
                         // || true prevents pipeline failure if vulnerabilities are found (typical for Baseline scans)
