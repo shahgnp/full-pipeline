@@ -200,7 +200,7 @@ pipeline {
                           -u 1002:1002 \
                         zaproxy/zap-stable zap-baseline.py \
                         -t http://localhost:${ZAP_PORT} \
-                        -r /zap/wrk/zap_report.html \
+                        -r zap_report.html \
                         || true 
                         """
                         // || true prevents pipeline failure if vulnerabilities are found (typical for Baseline scans)
