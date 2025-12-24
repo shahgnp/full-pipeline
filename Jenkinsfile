@@ -90,11 +90,12 @@ pipeline {
         }
 
 
-        stage('Generate SBOM (Syft)') {
+        stage('Generate 1 (Syft)') {
             steps {
                 script {
                     echo "--- Generating SBOM ---"
                     sh "syft ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG} -o cyclonedx-json > sbom.json"
+                    sh "syft ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG} -o table"
                 }
             }
         }
