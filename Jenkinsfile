@@ -69,17 +69,26 @@ pipeline {
             }
         }
 
-        stage('Security Scan (Trivy)') {
+        stage('Trivy Security Scan') {
             steps {
                 script {
-                    echo "--- Scanning Image with Trivy ---"
-                    // Scans the local image. 
-                    // --exit-code 0 means "Report only, don't fail build" (Good for labs)
-                    // --severity HIGH,CRITICAL filters the noise
-                    sh "trivy image --exit-code 0 --severity HIGH,CRITICAL --format table ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}"
+                    echo "Scanning Image using Trivy Container..."
+                    
+                    // --severity: Only show High and Critical bugs
+                    // --exit-code 0: Don't fail the build (Change to 1 if you want to block bad builds)
+                    // --no-progress: Cleaner logs in Jenkins
+                    sh """
+                        docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        aquasec/trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 0 \
+                        ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}
+                    """
                 }
             }
         }
+
 
         stage('Generate SBOM (Syft)') {
             steps {
