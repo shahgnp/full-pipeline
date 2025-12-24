@@ -9,18 +9,18 @@ pipeline {
 
     environment {
         // Configuration
-        NEXUS_REGISTRY = "registry.nchldemo.com" // REPLACE WITH YOUR NEXUS URL (No http://)
+        NEXUS_REGISTRY = "registry.nchldemo.com"
         NEXUS_CRED     = "nexus-auth"      // ID of Jenkins Credential
-        IMAGE_NAME     = "fintech-python-app"
-        CONTAINER_NAME = "fintech-prod-container"
+        IMAGE_NAME     = "fintech-python-app" // Add your name here
+        CONTAINER_NAME = "fintech-prod-container" // Add your name here
         
         // ZAP Configuration
-        ZAP_PORT       = "9000" // Matches your deployment snippet
+        ZAP_PORT       = "9000" // Change the port
         
         // Map Cosign Credentials
         COSIGN_PASSWORD = credentials('cosign-private-key')
         SONAR_SERVER_NAME = "sonar-server-admin"
-        SONAR_PROJECT_KEY = "fintech-app-trainer"
+        SONAR_PROJECT_KEY = "fintech-app-trainer" // Add your name here
     }
 
     stages {
@@ -43,22 +43,22 @@ pipeline {
             }
         }
 
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         script {
-        //             echo "--- Starting Static Code Analysis ---"
-        //             withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-        //                 sh """
-        //                 sonar-scanner \
-        //                   -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-        //                   -Dsonar.sources=. \
-        //                   -Dsonar.python.coverage.reportPaths=coverage.xml \
-        //                   -Dsonar.exclusions=venv/**,tests/**
-        //                 """
-        //             }
-        //         }
-        //     }
-        // }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    echo "--- Starting Static Code Analysis ---"
+                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+                        sh """
+                        sonar-scanner \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.sources=. \
+                          -Dsonar.python.coverage.reportPaths=coverage.xml \
+                          -Dsonar.exclusions=venv/**,tests/**
+                        """
+                    }
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -69,26 +69,25 @@ pipeline {
             }
         }
 
-        // stage('Trivy Security Scan') {
-        //     steps {
-        //         script {
-        //             echo "Scanning Image using Trivy Container..."
+        stage('Trivy Security Scan') {
+            steps {
+                script {
+                    echo "Scanning Image using Trivy Container..."
                     
-        //             // --severity: Only show High and Critical bugs
-        //             // --exit-code 0: Don't fail the build (Change to 1 if you want to block bad builds)
-        //             // --no-progress: Cleaner logs in Jenkins
-        //             sh """
-        //                 docker run --rm \
-        //                 -v /var/run/docker.sock:/var/run/docker.sock \
-        //                 aquasec/trivy image \
-        //                 --severity HIGH,CRITICAL \
-        //                 --exit-code 0 \
-        //                 ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}
-        //             """
-        //         }
-        //     }
-        // }
-
+                    // --severity: Only show High and Critical bugs
+                    // --exit-code 0: Don't fail the build (Change to 1 if you want to block bad builds)
+                    // --no-progress: Cleaner logs in Jenkins
+                    sh """
+                        docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        aquasec/trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 0 \
+                        ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}
+                    """
+                }
+            }
+        }
 
         stage('Generate 1 (Syft)') {
             steps {
@@ -220,8 +219,8 @@ pipeline {
             archiveArtifacts artifacts: 'zap-wrk/zap_report.html', fingerprint: true
 
             
-            // // Cleanup
-            // cleanWs()
+            // Cleanup
+            cleanWs()
         }
     }
 }
